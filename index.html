@@ -1,1 +1,15 @@
-<h1>Hello!</h1>
+<html>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<body onload="init()">
+<h1>Literacy Rates in India (2011)</h1>
+<svg width="300" height="300" id="top"></svg>
+</br>
+<svg width="300" height="300" id="bottom"></svg>
+</body>
+<script>
+var nationalLiteracyMF;
+async function init(){
+	nationalLiteracyMF = await d3.csv("National Literacy by MF.csv");
+}
+</script>
+</html>
