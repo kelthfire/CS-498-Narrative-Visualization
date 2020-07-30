@@ -25,7 +25,10 @@ var height = 400 - margin.top - margin.bottom;
 // Palettes
 var colorMF = d3.scaleOrdinal()
 	.domain(["Male","Female"])
-	.range(['#4e79a7','#f28e2b'])
+	.range(['#f28e2b','#4e79a7'])
+var colorUR = d3.scaleOrdinal()
+	.domain(["Urban","Rural"])
+	.range(['#b07aa1','#f1ce63'])
 		
 
 // X and Y Scales
@@ -97,7 +100,7 @@ async function init(){
 	return {
 		State: d.State,
 		Age: parseInt(d.Age),
-		Sex: d.Sex,
+		UrbanRural: d.UrbanRural,
 		LiteracyRate: parseFloat(d.LiteracyRate)
 	};
 });
@@ -110,8 +113,8 @@ async function init(){
 	drawAxes("#top");
 	drawAxes("#bottom");
 
-	drawLines("#top",literacyMF,"ANDAMAN & NICOBAR ISLANDS");
-	drawLines("#bottom",literacyMF,"NATIONAL");
+	drawLines("#top",literacyMF,colorMF,"NATIONAL");
+	drawLines("#bottom",literacyUR,colorUR,"NATIONAL");
 }
 
 function setSize(id){
@@ -129,6 +132,8 @@ function ggt(id){
 }
 
 function drawAxes(id){
+
+	// Get the graph transform
 	graph = ggt(id)
 
 	// X Axis
@@ -154,7 +159,8 @@ function drawAxes(id){
 	.text("Literacy Rate (%)");
 }
 
-function drawLines(id,data,state){
+function drawLines(id,data,colors,state){
+	
 	// Get the graph transform
 	graph = ggt(id);
 	
@@ -171,7 +177,7 @@ function drawLines(id,data,state){
 		.append("path")
 		.attr("id","lines")
 		.attr("fill", "none")
-		.attr("stroke", function(d){ return colorMF(d.key) })
+		.attr("stroke", function(d){ return colors(d.key) })
 		.attr("stroke-width", 2.5)
 		.attr("d", function(d){
 		return d3.line()
