@@ -1,18 +1,78 @@
 <html>
 <script src="https://d3js.org/d3.v5.min.js"></script>
+
+<head>
+  <title>Literacy Rates in India (2011)</title>
+</head>
+
 <body onload="init()">
 <h1>Literacy Rates in India (2011)</h1>
+
+<h2 id="topTitle">Graph 1</h2>
 <svg id="top"></svg>
+</br>
+<h2 id="bottomTitle">Graph 2</h2>
 <svg id="bottom"></svg>
 </body>
 <script>
-// set the dimensions and margins of the graphs
+//------Establish Page Formatting------//
+
+// Graph Margin and Dimensions
 var margin = {top: 10, right: 50, bottom: 40, left: 50};
 var width = 800 - margin.left - margin.right;
 var height = 400 - margin.top - margin.bottom;
 
+// X and Y Scales
+var x = d3.scaleLinear()
+.domain([0,100])
+.range([ 0, width ]);
+var y = d3.scaleLinear()
+.domain([0,100])
+.range([ height, 0 ]);
+
+
 //Data
 var nationalLiteracyMF;
+var stateLiteracyMF;
+
+var states = [
+"NATIONAL",
+"ANDAMAN & NICOBAR ISLANDS",
+"ANDHRA PRADESH",
+"ARUNACHAL PRADESH",
+"ASSAM",
+"BIHAR",
+"CHANDIGARH",
+"CHHATTISGARH",
+"DADRA & NAGAR HAVELI",
+"DAMAN & DIU",
+"DELHI",
+"GOA",
+"GUJARAT",
+"HARYANA",
+"HIMACHAL PRADESH",
+"JAMMU & KASHMIR",
+"JHARKHAND",
+"KARNATAKA",
+"KERALA",
+"LAKSHADWEEP",
+"MADHYA PRADESH",
+"MAHARASHTRA",
+"MANIPUR",
+"MEGHALAYA",
+"MIZORAM",
+"NAGALAND",
+"ODISHA",
+"PUDUCHERRY",
+"PUNJAB",
+"RAJASTHAN",
+"SIKKIM",
+"TAMIL NADU",
+"TRIPURA",
+"UTTAR PRADESH",
+"UTTARAKHAND",
+"WEST BENGAL"]
+
 
 // Initializiaton
 async function init(){
@@ -25,21 +85,52 @@ async function init(){
 		};
 	});
 	
-	// Set top
+	stateLiteracyMF = await d3.csv("https://kelthfire.github.io/CS-498-Narrative-Visualization/State Literacy by MF.csv", function(d){
+		return {
+			State: d.State,
+			Age: parseInt(d.Age),
+			Sex: d.Sex,
+			LiteracyRate: parseFloat(d.LiteracyRate)
+		};
+	});
+	
+	// Build Top Graph
 	var top = d3.select("#top").attr("width", width + margin.left + margin.right)
 	.attr("height", height + margin.top + margin.bottom)
 	.append("g")
 	.attr("transform",
 		  "translate(" + margin.left + "," + margin.top + ")");
 	
+	// Build Bottom Graph
+	var bottom = d3.select("#bottom").attr("width", width + margin.left + margin.right)
+	.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+	.attr("transform",
+		  "translate(" + margin.left + "," + margin.top + ")");
+	
+	// Draw the axes
+	drawAxes(top);
+	drawAxes(bottom);
+
+	// TODO national
+	national(top);
+	
+	var stateStats = d3.nest()
+	.key(function(d) {return d.State;})
+	.key(function(d) {return d.Sex;})
+	.entries(stateLiteracyMF);
+	
+	console.log(stateStats.filter(function(d){if(d.key=="ANDAMAN & NICOBAR ISLANDS"){return d;}}))
+	
+	console.log(stateStats.keys())
+}
+
+function drawAxes(graph){
 	// X Axis
-	var x = d3.scaleLinear()
-	.domain([0,100])
-	.range([ 0, width ]);
-	top.append("g")
+	graph.append("g")
 	.attr("transform", "translate(0," + height + ")")
 	.call(d3.axisBottom(x).ticks(10));
-	top.append("text")
+	graph.append("text")
 	.attr("class", "x label")
 	.attr("text-anchor", "middle")
 	.attr("x", width/2)
@@ -47,26 +138,19 @@ async function init(){
 	.text("Age");
 	
 	// Y axis
-	var y = d3.scaleLinear()
-	.domain([0,100])
-	.range([ height, 0 ]);
-	top.append("g")
+	graph.append("g")
 	.call(d3.axisLeft(y));
-	top.append("text")
+	graph.append("text")
 	.attr("class", "y label")
 	.attr("text-anchor", "middle")
 	.attr("x",-height/2)
 	.attr("y",-margin.left+20)
 	.attr("transform", "rotate(-90)")
 	.text("Literacy Rate (%)");
-	
-
-		
-	national(top,x,y)
 }
 
-function national(top,x,y){
-		var sumstat = d3.nest()
+function national(top){
+	var sumstat = d3.nest()
 	.key(function(d) {return d.Sex;})
 	.entries(nationalLiteracyMF);
 	
