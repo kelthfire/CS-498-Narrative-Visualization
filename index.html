@@ -3,21 +3,96 @@
 <body onload="init()">
 <h1>Literacy Rates in India (2011)</h1>
 <svg id="top"></svg>
-</br>
 <svg id="bottom"></svg>
 </body>
 <script>
+// set the dimensions and margins of the graphs
+var margin = {top: 10, right: 50, bottom: 40, left: 50};
+var width = 800 - margin.left - margin.right;
+var height = 400 - margin.top - margin.bottom;
+
+//Data
 var nationalLiteracyMF;
+
+// Initializiaton
 async function init(){
 	//Load and Parse the CSV's
 	nationalLiteracyMF = await d3.csv("https://kelthfire.github.io/CS-498-Narrative-Visualization/National Literacy by MF.csv", function(d){
 		return {
-			
+			Age: parseInt(d.Age),
+			Sex: d.Sex,
+			LiteracyRate: parseFloat(d.LiteracyRate)
 		};
 	});
+	
+	// Set top
+	var top = d3.select("#top").attr("width", width + margin.left + margin.right)
+	.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+	.attr("transform",
+		  "translate(" + margin.left + "," + margin.top + ")");
+	
+	// X Axis
+	var x = d3.scaleLinear()
+	.domain([0,100])
+	.range([ 0, width ]);
+	top.append("g")
+	.attr("transform", "translate(0," + height + ")")
+	.call(d3.axisBottom(x).ticks(10));
+	top.append("text")
+	.attr("class", "x label")
+	.attr("text-anchor", "middle")
+	.attr("x", width/2)
+	.attr("y", height + margin.bottom-5)
+	.text("Age");
+	
+	// Y axis
+	var y = d3.scaleLinear()
+	.domain([0,100])
+	.range([ height, 0 ]);
+	top.append("g")
+	.call(d3.axisLeft(y));
+	top.append("text")
+	.attr("class", "y label")
+	.attr("text-anchor", "middle")
+	.attr("x",-height/2)
+	.attr("y",-margin.left+20)
+	.attr("transform", "rotate(-90)")
+	.text("Literacy Rate (%)");
+	
+
+		
+	national(top,x,y)
 }
 
-function nationalView()
+function national(top,x,y){
+		var sumstat = d3.nest()
+	.key(function(d) {return d.Sex;})
+	.entries(nationalLiteracyMF);
+	
+	
+	// color palette
+	var res = sumstat.map(function(d){ return d.key }) // list of group names
+	var color = d3.scaleOrdinal()
+		.domain(res)
+		.range(['#4e79a7','#f28e2b'])
+		
+	
+  // Draw the line
+  top.selectAll(".line")
+      .data(sumstat)
+      .enter()
+      .append("path")
+        .attr("fill", "none")
+        .attr("stroke", function(d){ return color(d.key) })
+        .attr("stroke-width", 1.5)
+        .attr("d", function(d){
+          return d3.line()
+            .x(function(d) { return x(d.Age); })
+            .y(function(d) { return y(+d.LiteracyRate); })
+            (d.values)
+        })
+}
 
 </script>
 </html>
