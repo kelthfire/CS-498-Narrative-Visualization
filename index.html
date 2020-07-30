@@ -22,6 +22,12 @@ var margin = {top: 10, right: 50, bottom: 40, left: 50};
 var width = 800 - margin.left - margin.right;
 var height = 400 - margin.top - margin.bottom;
 
+// Palettes
+var colorMF = d3.scaleOrdinal()
+	.domain(["Male","Female"])
+	.range(['#4e79a7','#f28e2b'])
+		
+
 // X and Y Scales
 var x = d3.scaleLinear()
 .domain([0,100])
@@ -32,8 +38,7 @@ var y = d3.scaleLinear()
 
 
 //Data
-var nationalLiteracyMF;
-var stateLiteracyMF;
+var literacyMF;
 
 var states = [
 "NATIONAL",
@@ -76,16 +81,7 @@ var states = [
 
 // Initializiaton
 async function init(){
-	//Load and Parse the CSV's
-	nationalLiteracyMF = await d3.csv("https://kelthfire.github.io/CS-498-Narrative-Visualization/National Literacy by MF.csv", function(d){
-		return {
-			Age: parseInt(d.Age),
-			Sex: d.Sex,
-			LiteracyRate: parseFloat(d.LiteracyRate)
-		};
-	});
-	
-	stateLiteracyMF = await d3.csv("https://kelthfire.github.io/CS-498-Narrative-Visualization/Literacy by MF.csv", function(d){
+	literacyMF = await d3.csv("https://kelthfire.github.io/CS-498-Narrative-Visualization/Literacy by MF.csv", function(d){
 		return {
 			State: d.State,
 			Age: parseInt(d.Age),
@@ -93,39 +89,36 @@ async function init(){
 			LiteracyRate: parseFloat(d.LiteracyRate)
 		};
 	});
-	
-	// Build Top Graph
-	var top = d3.select("#top").attr("width", width + margin.left + margin.right)
-	.attr("height", height + margin.top + margin.bottom)
-	.append("g")
-	.attr("transform",
-		  "translate(" + margin.left + "," + margin.top + ")");
-	
-	// Build Bottom Graph
-	var bottom = d3.select("#bottom").attr("width", width + margin.left + margin.right)
-	.attr("height", height + margin.top + margin.bottom)
-	.append("g")
-	.attr("transform",
-		  "translate(" + margin.left + "," + margin.top + ")");
+
+	// Set Size
+	setSize("#top")
+	setSize("#bottom")
 	
 	// Draw the axes
-	drawAxes(top);
-	drawAxes(bottom);
+	drawAxes("#top");
+	drawAxes("#bottom");
 
-	// TODO national
-	national(top);
-	
-	var stateStats = d3.nest()
-	.key(function(d) {return d.State;})
-	.key(function(d) {return d.Sex;})
-	.entries(stateLiteracyMF);
-	
-	console.log(stateStats.filter(function(d){if(d.key=="ANDAMAN & NICOBAR ISLANDS"){return d;}}))
-	
-	console.log(stateStats.keys())
+	drawLines("#top",literacyMF,"ANDAMAN & NICOBAR ISLANDS");
+	drawLines("#bottom",literacyMF,"NATIONAL");
 }
 
-function drawAxes(graph){
+function setSize(id){
+	d3.select(id)
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom);
+}
+
+// Get Graph Transofrm
+function ggt(id){
+	return d3.select(id)
+	.append("g")
+	.attr("transform",
+		  "translate(" + margin.left + "," + margin.top + ")");
+}
+
+function drawAxes(id){
+	graph = ggt(id)
+
 	// X Axis
 	graph.append("g")
 	.attr("transform", "translate(0," + height + ")")
@@ -149,33 +142,40 @@ function drawAxes(graph){
 	.text("Literacy Rate (%)");
 }
 
-function national(top){
-	var sumstat = d3.nest()
+function drawLines(id,data,state){
+	// Get the graph transform
+	graph = ggt(id);
+	
+	
+	var stateNesting = d3.nest()
 	.key(function(d) {return d.Sex;})
-	.entries(nationalLiteracyMF);
+	.entries(data.filter(function(d){if(d.State==state){return d;}}));
 	
-	
-	// color palette
-	var res = sumstat.map(function(d){ return d.key }) // list of group names
-	var color = d3.scaleOrdinal()
-		.domain(res)
-		.range(['#4e79a7','#f28e2b'])
-		
-	
-  // Draw the line
-  top.selectAll(".line")
-      .data(sumstat)
-      .enter()
-      .append("path")
-        .attr("fill", "none")
-        .attr("stroke", function(d){ return color(d.key) })
-        .attr("stroke-width", 1.5)
-        .attr("d", function(d){
-          return d3.line()
-            .x(function(d) { return x(d.Age); })
-            .y(function(d) { return y(+d.LiteracyRate); })
-            (d.values)
+
+	// Draw the line
+	graph.selectAll(".line")
+		.data(stateNesting)
+		.enter()
+		.append("path")
+		.attr("id","lines")
+		.attr("fill", "none")
+		.attr("stroke", function(d){ return colorMF(d.key) })
+		.attr("stroke-width", 2.5)
+		.attr("d", function(d){
+		return d3.line()
+			.x(function(d) { return x(d.Age); })
+			.y(function(d) { return y(+d.LiteracyRate); })
+			(d.values)
         })
+}
+
+function removeLines(id){
+	d3.select(id).selectAll("#lines").remove();
+}
+
+function updatePlot(id,state){
+	removeLines(id);
+	drawLines(id,state)
 }
 
 </script>
