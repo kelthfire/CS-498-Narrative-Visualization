@@ -6,13 +6,28 @@
 </head>
 
 <body onload="init()">
-<h1>Literacy Rates in India (2011)</h1>
 
-<h2 id="topTitle">Graph 1</h2>
-<svg id="top"></svg>
-</br>
-<h2 id="bottomTitle">Graph 2</h2>
-<svg id="bottom"></svg>
+	<table width = "1600" border = "0">
+		<tr>
+			<td colspan = "2">
+				<h1>Literacy Rates in India (2011)</h1>
+			</td>
+		</tr>
+		<tr valign = "top">
+			<td id="graphWindow" width="800">
+				<h2>Literacy Rate By Sex</h2>
+				<svg id="top"></svg>
+				</br>
+				<h2>Literacy Rate By Urban/Rural</h2>
+				<svg id="bottom"></svg>
+			</td>
+			<td id="textWindow">
+				<h2>Hello!</h2>
+			</td>
+		</tr>
+
+	</table>
+
 </body>
 <script>
 //------Establish Page Formatting------//
@@ -21,6 +36,8 @@
 var margin = {top: 10, right: 50, bottom: 40, left: 50};
 var width = 800 - margin.left - margin.right;
 var height = 400 - margin.top - margin.bottom;
+
+
 
 // Palettes
 var colorMF = d3.scaleOrdinal()
@@ -112,9 +129,59 @@ async function init(){
 	// Draw the axes
 	drawAxes("#top");
 	drawAxes("#bottom");
+	
+	//Enable Arrowheads
+	enableArrowhead("#top");
+	enableArrowhead("#bottom");
+	
+	// Draw legend
+	drawLegend("#top",["Male","Female"],colorMF);
+	drawLegend("#bottom",["Urban","Rural"],colorUR);
+	
+	// Draw First Graph
+	drawLines("#top","MF","NATIONAL");
+	drawLines("#bottom","UR","NATIONAL");
+	
+	//Draw Arrow
+	drawArrow("#top",30,100,55,85);
+}
 
-	drawLines("#top",literacyMF,colorMF,"NATIONAL");
-	drawLines("#bottom",literacyUR,colorUR,"NATIONAL");
+
+function drawArrow(id,x1,y1,x2,y2){
+	// Get the graph transform
+	graph = ggt(id);
+	
+	graph.append("line")
+	.attr("class","arrow")
+	.attr("marker-end","url(#arrowhead")
+	.attr("x1",x(x1))
+	.attr("x2",x(x2))
+	.attr("y1",y(y1))
+	.attr("y2",y(y2))
+	.attr("fill", "none")
+	.attr("stroke", "#8cd17d")
+	.attr("stroke-width", 6)
+	
+}
+
+function deleteArrows(id){
+	d3.select(id).selectAll(".arrow").remove();
+}
+
+function enableArrowhead(id){
+	d3.select(id)
+	.append("defs")
+	.append("marker")
+	.attr("id","arrowhead")
+	.attr("viewBox","0 -5 10 10")
+	.attr("refX",5)
+	.attr("refY",0)
+	.attr("markerWidth",4)
+	.attr("markerHeight",4)
+	.attr("orient","auto")
+	.append("path")
+	.attr("d", "M0,-5L10,0L0,5")
+	.attr("fill","#8cd17d");
 }
 
 function setSize(id){
@@ -159,23 +226,57 @@ function drawAxes(id){
 	.text("Literacy Rate (%)");
 }
 
-function drawLines(id,data,colors,state){
+function drawLegend(id,legend,colors){
+	var size = 20;
+	d3.select(id).selectAll("legendBoxes")
+	.data(legend)
+	.enter()
+	.append("rect")
+	.attr("x",margin.left + 30)
+	.attr("y", function(d,i){ return height - margin.bottom - 30 + i*(size+7)})
+	.attr("width", size)
+	.attr("height", size)
+	.attr("fill", function(d) {return colors(d)});
+	
+	d3.select(id).selectAll("legendText")
+	.data(legend)
+	.enter()
+	.append("text")
+	.attr("x",margin.left + 30 + size*1.4)
+	.attr("y", function(d,i){ return height - margin.bottom - 30 + i*(size+7) + (size/2)})
+	.style("fill", function(d){ return colors(d)})
+	.text(function(d){ return d})
+	.attr("text-anchor", "left")
+	.style("alignment-baseline", "middle")
+}
+
+function drawLines(id,MFUR,state){
 	
 	// Get the graph transform
 	graph = ggt(id);
 	
-	
-	var stateNesting = d3.nest()
-	.key(function(d) {return d.Sex;})
-	.entries(data.filter(function(d){if(d.State==state){return d;}}));
-	
+	// Get the nesting and colors 
+	var stateNesting;
+	var colors;
+	if(MFUR=="MF"){
+		stateNesting = d3.nest()
+			.key(function(d) {return d.Sex;})
+			.entries(literacyMF.filter(function(d){if(d.State==state){return d;}}));
+		colors = colorMF;
+	}
+	if(MFUR=="UR"){
+		stateNesting = d3.nest()
+			.key(function(d) {return d.UrbanRural;})
+			.entries(literacyUR.filter(function(d){if(d.State==state){return d;}}));
+		colors = colorUR;
+	}
 
 	// Draw the line
 	graph.selectAll(".line")
 		.data(stateNesting)
 		.enter()
 		.append("path")
-		.attr("id","lines")
+		.attr("class","line")
 		.attr("fill", "none")
 		.attr("stroke", function(d){ return colors(d.key) })
 		.attr("stroke-width", 2.5)
@@ -188,12 +289,12 @@ function drawLines(id,data,colors,state){
 }
 
 function removeLines(id){
-	d3.select(id).selectAll("#lines").remove();
+	d3.select(id).selectAll(".line").remove();
 }
 
-function updatePlot(id,state){
+function updatePlot(id,MFUR,state){
 	removeLines(id);
-	drawLines(id,state)
+	drawLines(id,MFUR,state)
 }
 
 </script>
