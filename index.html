@@ -85,7 +85,7 @@ async function init(){
 		};
 	});
 	
-	stateLiteracyMF = await d3.csv("https://kelthfire.github.io/CS-498-Narrative-Visualization/State Literacy by MF.csv", function(d){
+	stateLiteracyMF = await d3.csv("https://kelthfire.github.io/CS-498-Narrative-Visualization/Literacy by MF.csv", function(d){
 		return {
 			State: d.State,
 			Age: parseInt(d.Age),
