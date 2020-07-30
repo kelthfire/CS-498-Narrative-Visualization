@@ -39,6 +39,7 @@ var y = d3.scaleLinear()
 
 //Data
 var literacyMF;
+var literacyUR;
 
 var states = [
 "NATIONAL",
@@ -81,6 +82,8 @@ var states = [
 
 // Initializiaton
 async function init(){
+	
+	// Load Data
 	literacyMF = await d3.csv("https://kelthfire.github.io/CS-498-Narrative-Visualization/Literacy by MF.csv", function(d){
 		return {
 			State: d.State,
@@ -89,6 +92,15 @@ async function init(){
 			LiteracyRate: parseFloat(d.LiteracyRate)
 		};
 	});
+	
+	literacyUR = await d3.csv("https://kelthfire.github.io/CS-498-Narrative-Visualization/Literacy by UR.csv", function(d){
+	return {
+		State: d.State,
+		Age: parseInt(d.Age),
+		Sex: d.Sex,
+		LiteracyRate: parseFloat(d.LiteracyRate)
+	};
+});
 
 	// Set Size
 	setSize("#top")
