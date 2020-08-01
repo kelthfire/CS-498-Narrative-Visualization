@@ -15,14 +15,18 @@
 		</tr>
 		<tr valign = "top">
 			<td id="graphWindow" width="800">
-				<h2>Literacy Rate By Sex</h2>
+				<h2>Literacy Rate By Sex: <span class="stateTitle"></span></h2>
 				<svg id="top"></svg>
 				</br>
-				<h2>Literacy Rate By Urban/Rural</h2>
+				<h2>Literacy Rate By Urban/Rural: <span class="stateTitle"></span></h2>
 				<svg id="bottom"></svg>
 			</td>
 			<td id="textWindow">
-				<h2>Hello!</h2>
+				<h2>Data Walkthrough</h2> 
+				<p id="walkthrough"></p>
+				<select id="dropdown"></select></br></br></br></br>
+				<button id="backButton" style="float:left">← Back</button>
+				<button id="forwardButton" style="float:right">Forward →</button>
 			</td>
 		</tr>
 
@@ -60,7 +64,10 @@ var y = d3.scaleLinear()
 //Data
 var literacyMF;
 var literacyUR;
+var slide;
 
+
+// Possible states
 var states = [
 "NATIONAL",
 "ANDAMAN & NICOBAR ISLANDS",
@@ -98,6 +105,40 @@ var states = [
 "UTTAR PRADESH",
 "UTTARAKHAND",
 "WEST BENGAL"]
+
+// Presentation Info
+
+slideState = [
+"NATIONAL", //Slide 0
+"NATIONAL", //Slide 1
+"NATIONAL", //Slide 2
+"NATIONAL", //Slide 3
+"NATIONAL", //Slide 4
+"NATIONAL", //Slide 5
+"KERALA", //Slide 6
+"~"] //Slide 7
+
+dropdownVis = [
+"none", //Slide 0
+"none", //Slide 1
+"none", //Slide 2
+"none", //Slide 3
+"none", //Slide 4
+"none", //Slide 5
+"none", //Slide 6
+"inline"] //Slide 7
+
+walkthrough = [
+"How do literacy rates vary across Age, Sex, and Urban/Rural populations in different geographies in India?<br/><br/>At the national level in India, we can see four key metrics have improved in younger generations when compared told older generations.", //Slide 0
+"How do literacy rates vary across Age, Sex, and Urban/Rural populations in different geographies in India?<br/><br/>1) Literacy Rates Generally<br/><br/>Demonstrated by both line graphs increasing overall as you move from right to left", //Slide 1
+"How do literacy rates vary across Age, Sex, and Urban/Rural populations in different geographies in India?<br/><br/>2) The Male/Female Literacy Gap<br/><br/>Demonstrated by the narrowing difference between male and female literacy as you move from right to left", //Slide 2
+"How do literacy rates vary across Age, Sex, and Urban/Rural populations in different geographies in India?<br/><br/>3) The Urban/Rural Literacy Gap<br/><br/>Demonstrated by the narrowing difference between urban and rural literacy as you move from right to left", //Slide 3
+"How do literacy rates vary across Age, Sex, and Urban/Rural populations in different geographies in India?<br/><br/>4) Knowledge of One's Own Birthday<br/><br/>Demonstrated by the decreasing magnitude of literacy rate dips on ages divisible by 5 as you move from right to left<br/><br/>Notice the pattern of lower literacy rates in Indians with reported ages divisible by 5?  This is because many people in India don't know their own birthday.  When asked by census workers, they will provide their best estimate (often a multiple of 5).  Not knowing one's own birthday is correlated with several socioeconomic factors.  In this case: education.", //Slide 4
+"At the national level, the “Literacy Rate by Sex” and “Literacy Rate by Urban/Rural” graphs looked incredibly similar.  This suggests that the efforts to close the male/female literacy gap and the urban/rural literacy gap have been progressing at similar rates across history.  However, by clicking on a specific state we see that different regions have very different educational histories.", //Slide 5
+"For example, in Kerala (southwest India) we see that there is hardly any Urban/Rural literacy gap in any age group.  This suggests (but does not prove) that the urban and rural areas of Kerala have had similar educational access for the past century.  However, there is a substantial male/female literacy rate gap in ages >50 that does not exist in ages <50.  This would suggest (but does not prove) that there were major efforts in the 1960’s and 1970’s to improve women’s access to education in Kerala.  Even though this is hardly a complete picture, this data enables us gain a unique insight into the cultural history of Kerala that we could potentially do more research on.",//Slide 6
+"Now, why don't you do some exploration of your own?  Click on the dropdown below to select a region to view:"] 
+
+
 
 
 // Initializiaton
@@ -144,6 +185,57 @@ async function init(){
 	
 	//Draw Arrow
 	drawArrow("#top",30,100,55,85);
+	
+	//Dropdown
+	d3.select("#dropdown")
+	.style("display","none")
+	.on("change", function() {
+		updatePlot("#top","MF",d3.select("#dropdown").property("value"))
+		updatePlot("#bottom","UR",d3.select("#dropdown").property("value"))
+	})
+	.selectAll("option")
+	.data(states)
+	.enter()
+	.append("option")
+	.attr("value", function (d) { return d; })
+	.text(function (d) { return d; });
+	
+	// Button Events
+	d3.select("#backButton").on("click", slideBackwards);
+	d3.select("#forwardButton").on("click", slideForward);
+	
+	// Selection Events
+	
+	//Set Slide
+	goToSlide(0);
+	slide = 0;
+}
+
+
+function slideForward(){
+	if(slide < 7){
+		slide = slide + 1;
+		goToSlide(slide)
+	}
+	if(slide == 7){
+		updatePlot("#top","MF",d3.select("#dropdown").property("value"))
+		updatePlot("#bottom","UR",d3.select("#dropdown").property("value"))
+	}
+}
+
+function slideBackwards(){
+	if(slide > 0){
+		slide = slide - 1;
+		goToSlide(slide)
+	}
+}
+
+function goToSlide(slide){
+	d3.selectAll(".stateTitle").text(slideState[slide])
+	d3.select("#walkthrough").html(walkthrough[slide])
+	updatePlot("#top","MF",slideState[slide])
+	updatePlot("#bottom","UR",slideState[slide])
+	d3.select("#dropdown").style("display",dropdownVis[slide])
 }
 
 
