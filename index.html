@@ -22,11 +22,12 @@
 				<svg id="bottom"></svg>
 			</td>
 			<td id="textWindow">
-				<h2>Data Walkthrough</h2> 
-				<p id="walkthrough"></p>
-				<select id="dropdown"></select></br></br></br></br>
+				
 				<button id="backButton" style="float:left">← Back</button>
-				<button id="forwardButton" style="float:right">Forward →</button>
+				<button id="forwardButton" style="float:right">Forward →</button></br>
+				<h2 style="text-align:center">Data Walkthrough</h2> 
+				<p id="walkthrough"></p>
+				<select id="dropdown"></select>
 			</td>
 		</tr>
 
@@ -138,6 +139,15 @@ walkthrough = [
 "For example, in Kerala (southwest India) we see that there is hardly any Urban/Rural literacy gap in any age group.  This suggests (but does not prove) that the urban and rural areas of Kerala have had similar educational access for the past century.  However, there is a substantial male/female literacy rate gap in ages >50 that does not exist in ages <50.  This would suggest (but does not prove) that there were major efforts in the 1960’s and 1970’s to improve women’s access to education in Kerala.  Even though this is hardly a complete picture, this data enables us gain a unique insight into the cultural history of Kerala that we could potentially do more research on.",//Slide 6
 "Now, why don't you do some exploration of your own?  Click on the dropdown below to select a region to view:"] 
 
+arrows = [
+[], //Slide 0
+[["#top",70,10,15,70],["#top",70,80,15,100]], //Slide 1
+[["#top",73,50,73,70],["#top",73,50,73,42],["#top",25,78,25,72],["#top",25,78,25,80]], //Slide 2
+[["#bottom",73,50,73,76],["#bottom",73,50,73,46],["#bottom",25,78,25,82],["#bottom",25,78,25,75]], //Slide 3
+[["#top",71.5,59.5,73,70],["#top",71.5,59.5,70,49],["#top",38.75,76,39.5,72],["#top",38.75,76,38,80]], //Slide 4
+[], //Slide 5
+[["#top",90,60,90,70],["#top",90,60,90,53],["#top",50,60,50,82]], //Slide 6
+[]] //Slide 7
 
 
 
@@ -183,15 +193,13 @@ async function init(){
 	drawLines("#top","MF","NATIONAL");
 	drawLines("#bottom","UR","NATIONAL");
 	
-	//Draw Arrow
-	drawArrow("#top",30,100,55,85);
-	
 	//Dropdown
 	d3.select("#dropdown")
 	.style("display","none")
 	.on("change", function() {
 		updatePlot("#top","MF",d3.select("#dropdown").property("value"))
 		updatePlot("#bottom","UR",d3.select("#dropdown").property("value"))
+		d3.selectAll(".stateTitle").text(d3.select("#dropdown").property("value"))
 	})
 	.selectAll("option")
 	.data(states)
@@ -203,8 +211,6 @@ async function init(){
 	// Button Events
 	d3.select("#backButton").on("click", slideBackwards);
 	d3.select("#forwardButton").on("click", slideForward);
-	
-	// Selection Events
 	
 	//Set Slide
 	goToSlide(0);
@@ -220,6 +226,7 @@ function slideForward(){
 	if(slide == 7){
 		updatePlot("#top","MF",d3.select("#dropdown").property("value"))
 		updatePlot("#bottom","UR",d3.select("#dropdown").property("value"))
+		d3.selectAll(".stateTitle").text(d3.select("#dropdown").property("value"))
 	}
 }
 
@@ -231,11 +238,14 @@ function slideBackwards(){
 }
 
 function goToSlide(slide){
-	d3.selectAll(".stateTitle").text(slideState[slide])
-	d3.select("#walkthrough").html(walkthrough[slide])
-	updatePlot("#top","MF",slideState[slide])
-	updatePlot("#bottom","UR",slideState[slide])
-	d3.select("#dropdown").style("display",dropdownVis[slide])
+	d3.selectAll(".stateTitle").text(slideState[slide]);
+	d3.select("#walkthrough").html(walkthrough[slide]);
+	updatePlot("#top","MF",slideState[slide]);
+	updatePlot("#bottom","UR",slideState[slide]);
+	d3.select("#dropdown").style("display",dropdownVis[slide]);
+	deleteArrows("#top");
+	deleteArrows("#bottom");
+	arrows[slide].forEach(function(ar){drawArrow(ar[0],ar[1],ar[2],ar[3],ar[4])});
 }
 
 
@@ -253,6 +263,7 @@ function drawArrow(id,x1,y1,x2,y2){
 	.attr("fill", "none")
 	.attr("stroke", "#8cd17d")
 	.attr("stroke-width", 6)
+	.attr("opacity", 0.7)
 	
 }
 
